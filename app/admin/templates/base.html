@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}域名配置管理{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="{{ url_for('admin.index') }}">域名配置管理</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('admin.domain_list') }}">域名列表</a></li>
+            <li><a href="/api/docs" target="_blank">API 文档</a></li>
+            {% if config.ADMIN_PASSWORD and session.get('admin_authenticated') %}
+            <li><a href="{{ url_for('admin.logout') }}">退出</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="footer">
+        <p>轻量级域名配置服务 &copy; 2024</p>
+    </footer>
+</body>
+</html>

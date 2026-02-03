@@ -1,0 +1,30 @@
+# Development override - use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Mount local code for hot reload
+      - ./app:/app/app:ro
+      - ./config.py:/app/config.py:ro
+      - ./run.py:/app/run.py:ro
+      - ./migrations:/app/migrations:ro
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - SECRET_KEY=dev-secret-key
+    ports:
+      - "5000:5000"
+    # Override command for development with auto-reload
+    command: ["python", "run.py"]
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"

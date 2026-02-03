@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}域名列表 - 域名配置管理{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">域名列表</h1>
+        <a href="{{ url_for('admin.domain_create') }}" class="btn btn-primary">添加域名</a>
+    </div>
+    
+    {% if domains %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>域名</th>
+                <th>描述</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for domain in domains %}
+            <tr>
+                <td>{{ domain.id }}</td>
+                <td>
+                    <a href="{{ url_for('admin.config_list', domain_id=domain.id) }}">
+                        {{ domain.name }}
+                    </a>
+                </td>
+                <td class="text-muted">{{ domain.description or '-' }}</td>
+                <td>
+                    {% if domain.is_active %}
+                        <span class="status status-active"></span>启用
+                    {% else %}
+                        <span class="status status-inactive"></span>禁用
+                    {% endif %}
+                </td>
+                <td class="text-muted">{{ domain.created_at.strftime('%Y-%m-%d %H:%M') if domain.created_at else '-' }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.config_list', domain_id=domain.id) }}" class="btn btn-secondary btn-sm">配置</a>
+                    <a href="{{ url_for('admin.domain_edit', id=domain.id) }}" class="btn btn-secondary btn-sm">编辑</a>
+                    <form action="{{ url_for('admin.domain_delete', id=domain.id) }}" method="POST" style="display:inline;" 
+                          onsubmit="return confirm('确定要删除域名 {{ domain.name }} 吗？这将同时删除所有相关配置。');">
+                        <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">暂无域名，<a href="{{ url_for('admin.domain_create') }}">点击添加</a></p>
+    {% endif %}
+</div>
+{% endblock %}

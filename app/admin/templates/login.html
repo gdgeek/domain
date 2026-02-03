@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 域名配置管理{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>管理员登录</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary">登录</button>
+    </form>
+</div>
+{% endblock %}

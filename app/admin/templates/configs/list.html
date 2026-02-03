@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ domain.name }} 配置 - 域名配置管理{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h1 class="card-title">{{ domain.name }} 配置</h1>
+            <p class="text-muted mt-1">{{ domain.description or '无描述' }}</p>
+        </div>
+        {% if available_languages %}
+        <a href="{{ url_for('admin.config_create', domain_id=domain.id) }}" class="btn btn-primary">添加配置</a>
+        {% endif %}
+    </div>
+    
+    {% if configs %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>语言</th>
+                <th>配置预览</th>
+                <th>更新时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for config in configs %}
+            <tr>
+                <td>
+                    <span class="tag tag-blue">{{ config.language }}</span>
+                    {% if config.language == 'zh-CN' %}
+                    <span class="tag tag-green">默认</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted">
+                    {% if config.data %}
+                        {{ config.data.get('title', '') or config.data | tojson | truncate(50) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="text-muted">{{ config.updated_at.strftime('%Y-%m-%d %H:%M') if config.updated_at else '-' }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.config_edit', domain_id=domain.id, language=config.language) }}" 
+                       class="btn btn-secondary btn-sm">编辑</a>
+                    <form action="{{ url_for('admin.config_delete', domain_id=domain.id, language=config.language) }}" 
+                          method="POST" style="display:inline;"
+                          onsubmit="return confirm('确定要删除 {{ config.language }} 配置吗？');">
+                        <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">暂无配置，<a href="{{ url_for('admin.config_create', domain_id=domain.id) }}">点击添加</a></p>
+    {% endif %}
+</div>
+
+<div class="mt-2">
+    <a href="{{ url_for('admin.domain_list') }}" class="btn btn-secondary">返回域名列表</a>
+</div>
+{% endblock %}

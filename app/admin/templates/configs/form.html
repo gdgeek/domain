@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑配置' if config else '添加配置' }} - {{ domain.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h1 class="card-title">{{ '编辑配置' if config else '添加配置' }}</h1>
+            <p class="text-muted mt-1">域名: {{ domain.name }}</p>
+        </div>
+    </div>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="language">语言 *</label>
+            {% if config %}
+            <input type="text" class="form-control" value="{{ config.language }}" disabled>
+            <input type="hidden" name="language" value="{{ config.language }}">
+            {% else %}
+            <select id="language" name="language" class="form-control" required>
+                {% for lang in available_languages %}
+                <option value="{{ lang }}">{{ lang }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="data">配置数据 (JSON) *</label>
+            <textarea id="data" name="data" class="form-control" 
+                      placeholder='{"title": "网站标题", "description": "网站描述"}' required>{{ config.data | tojson(indent=2) if config and config.data else '{\n  "title": "",\n  "description": ""\n}' }}</textarea>
+            <small class="text-muted">请输入有效的 JSON 格式数据</small>
+        </div>
+        
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a href="{{ url_for('admin.config_list', domain_id=domain.id) }}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Simple JSON validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    var data = document.getElementById('data').value;
+    try {
+        JSON.parse(data);
+    } catch (err) {
+        e.preventDefault();
+        alert('配置数据必须是有效的 JSON 格式: ' + err.message);
+    }
+});
+</script>
+{% endblock %}
