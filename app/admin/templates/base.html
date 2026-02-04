@@ -13,6 +13,7 @@
         </div>
         <ul class="nav-links">
             <li><a href="{{ url_for('admin.domain_list') }}">域名列表</a></li>
+            <li><a href="{{ url_for('admin.env_check') }}">环境检查</a></li>
             <li><a href="/api/docs" target="_blank">API 文档</a></li>
             {% if config.ADMIN_PASSWORD and session.get('admin_authenticated') %}
             <li><a href="{{ url_for('admin.logout') }}">退出</a></li>

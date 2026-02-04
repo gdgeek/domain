@@ -226,3 +226,68 @@ def config_delete(domain_id, language):
         flash(str(e), 'error')
 
     return redirect(url_for('admin.config_list', domain_id=domain_id))
+
+
+@admin_bp.route('/env')
+@require_password
+def env_check():
+    """Environment variables check page."""
+    import os
+
+    env_vars = [
+        # 数据库配置
+        {'name': 'DATABASE_URL', 'required': False, 'default': 'sqlite:///data/app.db',
+         'desc': '完整数据库连接 URL（优先级高于分开配置）', 'group': '数据库'},
+        {'name': 'DB_HOST', 'required': False, 'default': '-',
+         'desc': 'MySQL 主机地址', 'group': '数据库'},
+        {'name': 'DB_PORT', 'required': False, 'default': '3306',
+         'desc': 'MySQL 端口', 'group': '数据库'},
+        {'name': 'DB_NAME', 'required': False, 'default': 'domain_config',
+         'desc': '数据库名', 'group': '数据库'},
+        {'name': 'DB_USER', 'required': False, 'default': 'root',
+         'desc': '数据库用户名', 'group': '数据库'},
+        {'name': 'DB_PASSWORD', 'required': False, 'default': '-',
+         'desc': '数据库密码', 'group': '数据库'},
+
+        # Redis 配置
+        {'name': 'REDIS_ENABLED', 'required': False, 'default': 'false',
+         'desc': '是否启用 Redis 缓存', 'group': 'Redis'},
+        {'name': 'REDIS_URL', 'required': False, 'default': '-',
+         'desc': '完整 Redis 连接 URL', 'group': 'Redis'},
+        {'name': 'REDIS_HOST', 'required': False, 'default': 'localhost',
+         'desc': 'Redis 主机地址', 'group': 'Redis'},
+        {'name': 'REDIS_PORT', 'required': False, 'default': '6379',
+         'desc': 'Redis 端口', 'group': 'Redis'},
+        {'name': 'REDIS_PASSWORD', 'required': False, 'default': '-',
+         'desc': 'Redis 密码', 'group': 'Redis'},
+        {'name': 'REDIS_TTL', 'required': False, 'default': '3600',
+         'desc': '缓存过期时间（秒）', 'group': 'Redis'},
+
+        # 应用配置
+        {'name': 'SECRET_KEY', 'required': False, 'default': 'dev-secret-key',
+         'desc': 'Flask 密钥', 'group': '应用'},
+        {'name': 'ADMIN_PASSWORD', 'required': False, 'default': 'admin123',
+         'desc': 'API/管理界面密码', 'group': '应用'},
+        {'name': 'FLASK_ENV', 'required': False, 'default': 'production',
+         'desc': '运行环境', 'group': '应用'},
+    ]
+
+    # 获取当前值
+    for var in env_vars:
+        var['current'] = os.environ.get(var['name'], '')
+        var['is_set'] = bool(var['current'])
+        # 隐藏敏感信息
+        if 'PASSWORD' in var['name'] or 'SECRET' in var['name']:
+            var['display'] = '******' if var['current'] else '-'
+        else:
+            var['display'] = var['current'] if var['current'] else '-'
+
+    # 按组分类
+    groups = {}
+    for var in env_vars:
+        group = var['group']
+        if group not in groups:
+            groups[group] = []
+        groups[group].append(var)
+
+    return render_template('env.html', groups=groups)
