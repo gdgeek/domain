@@ -92,9 +92,15 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     steps:
       - name: Trigger Portainer Webhook
+        if: ${{ secrets.PORTAINER_WEBHOOK_URL != '' }}
         run: curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
 
+      - name: Skip deploy (no webhook configured)
+        if: ${{ secrets.PORTAINER_WEBHOOK_URL == '' }}
+        run: echo "⏭️ 跳过部署：未配置 PORTAINER_WEBHOOK_URL" >> $GITHUB_STEP_SUMMARY
+
       - name: Summary
+        if: ${{ secrets.PORTAINER_WEBHOOK_URL != '' }}
         run: |
           echo "## 🚀 部署完成" >> $GITHUB_STEP_SUMMARY
           echo "镜像: \`${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
