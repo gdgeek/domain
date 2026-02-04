@@ -30,7 +30,7 @@ config_update = ns.model('ConfigUpdate', {
 @ns.param('domain_id', '域名ID')
 class ConfigList(Resource):
     """Config list operations for a domain."""
-    
+
     @ns.doc('list_configs')
     @ns.marshal_list_with(config_model)
     @require_api_auth
@@ -38,7 +38,7 @@ class ConfigList(Resource):
         """获取域名的所有配置"""
         configs = config_service.list_configs_by_domain(domain_id)
         return [c.to_dict() for c in configs]
-    
+
     @ns.doc('create_config')
     @ns.expect(config_input)
     @ns.marshal_with(config_model, code=201)
@@ -59,7 +59,7 @@ class ConfigList(Resource):
 @ns.param('language', '语言代码')
 class ConfigResource(Resource):
     """Single config operations."""
-    
+
     @ns.doc('get_config')
     @ns.marshal_with(config_model)
     @require_api_auth
@@ -67,7 +67,7 @@ class ConfigResource(Resource):
         """获取指定语言的配置"""
         config = config_service.get_config(domain_id, language)
         return config.to_dict()
-    
+
     @ns.doc('update_config')
     @ns.expect(config_update)
     @ns.marshal_with(config_model)
@@ -81,7 +81,7 @@ class ConfigResource(Resource):
             data=data.get('data', {})
         )
         return config.to_dict()
-    
+
     @ns.doc('delete_config')
     @ns.response(204, '删除成功')
     @require_api_auth

@@ -32,7 +32,7 @@ domain_update = ns.model('DomainUpdate', {
 @ns.route('')
 class DomainList(Resource):
     """Domain list operations."""
-    
+
     @ns.doc('list_domains')
     @ns.marshal_list_with(domain_model)
     @ns.param('active_only', '只显示启用的域名', type='boolean', default=False)
@@ -42,7 +42,7 @@ class DomainList(Resource):
         active_only = request.args.get('active_only', 'false').lower() == 'true'
         domains = domain_service.list_domains(active_only)
         return [d.to_dict() for d in domains]
-    
+
     @ns.doc('create_domain')
     @ns.expect(domain_input)
     @ns.marshal_with(domain_model, code=201)
@@ -62,7 +62,7 @@ class DomainList(Resource):
 @ns.param('id', '域名ID')
 class DomainResource(Resource):
     """Single domain operations."""
-    
+
     @ns.doc('get_domain')
     @ns.marshal_with(domain_model)
     @require_api_auth
@@ -70,7 +70,7 @@ class DomainResource(Resource):
         """获取指定域名"""
         domain = domain_service.get_domain(id)
         return domain.to_dict()
-    
+
     @ns.doc('update_domain')
     @ns.expect(domain_update)
     @ns.marshal_with(domain_model)
@@ -85,7 +85,7 @@ class DomainResource(Resource):
             is_active=data.get('is_active')
         )
         return domain.to_dict()
-    
+
     @ns.doc('delete_domain')
     @ns.response(204, '删除成功')
     @require_api_auth

@@ -28,7 +28,7 @@ def login():
     admin_password = current_app.config.get('ADMIN_PASSWORD')
     if not admin_password:
         return redirect(url_for('admin.index'))
-    
+
     if request.method == 'POST':
         password = request.form.get('password', '')
         if password == admin_password:
@@ -36,7 +36,7 @@ def login():
             next_url = request.args.get('next') or url_for('admin.index')
             return redirect(next_url)
         flash('密码错误', 'error')
-    
+
     return render_template('login.html')
 
 
@@ -78,7 +78,7 @@ def domain_create():
             return redirect(url_for('admin.domain_list'))
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
-    
+
     return render_template('domains/form.html', domain=None)
 
 
@@ -91,7 +91,7 @@ def domain_edit(id):
     except NotFoundError as e:
         flash(str(e), 'error')
         return redirect(url_for('admin.domain_list'))
-    
+
     if request.method == 'POST':
         try:
             domain = domain_service.update_domain(
@@ -104,7 +104,7 @@ def domain_edit(id):
             return redirect(url_for('admin.domain_list'))
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
-    
+
     return render_template('domains/form.html', domain=domain)
 
 
@@ -119,7 +119,7 @@ def domain_delete(id):
         flash(f"域名 '{domain_name}' 已删除", 'success')
     except NotFoundError as e:
         flash(str(e), 'error')
-    
+
     return redirect(url_for('admin.domain_list'))
 
 
@@ -132,10 +132,10 @@ def config_list(domain_id):
         configs = config_service.list_configs_by_domain(domain_id)
         supported_languages = current_app.config.get('SUPPORTED_LANGUAGES', [])
         existing_languages = [c.language for c in configs]
-        available_languages = [l for l in supported_languages if l not in existing_languages]
-        
-        return render_template('configs/list.html', 
-                               domain=domain, 
+        available_languages = [lang for lang in supported_languages if lang not in existing_languages]
+
+        return render_template('configs/list.html',
+                               domain=domain,
                                configs=configs,
                                available_languages=available_languages)
     except NotFoundError as e:
@@ -152,12 +152,12 @@ def config_create(domain_id):
     except NotFoundError as e:
         flash(str(e), 'error')
         return redirect(url_for('admin.domain_list'))
-    
+
     if request.method == 'POST':
         try:
             data_str = request.form.get('data', '{}')
             data = json.loads(data_str) if data_str else {}
-            
+
             config = config_service.create_config(
                 domain_id=domain_id,
                 language=request.form.get('language', 'zh-CN'),
@@ -169,14 +169,14 @@ def config_create(domain_id):
             flash("配置数据必须是有效的 JSON 格式", 'error')
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
-    
+
     supported_languages = current_app.config.get('SUPPORTED_LANGUAGES', [])
     existing_configs = config_service.list_configs_by_domain(domain_id)
     existing_languages = [c.language for c in existing_configs]
-    available_languages = [l for l in supported_languages if l not in existing_languages]
-    
-    return render_template('configs/form.html', 
-                           domain=domain, 
+    available_languages = [lang for lang in supported_languages if lang not in existing_languages]
+
+    return render_template('configs/form.html',
+                           domain=domain,
                            config=None,
                            available_languages=available_languages)
 
@@ -191,12 +191,12 @@ def config_edit(domain_id, language):
     except NotFoundError as e:
         flash(str(e), 'error')
         return redirect(url_for('admin.domain_list'))
-    
+
     if request.method == 'POST':
         try:
             data_str = request.form.get('data', '{}')
             data = json.loads(data_str) if data_str else {}
-            
+
             config = config_service.update_config(
                 domain_id=domain_id,
                 language=language,
@@ -208,9 +208,9 @@ def config_edit(domain_id, language):
             flash("配置数据必须是有效的 JSON 格式", 'error')
         except (ValidationError, NotFoundError) as e:
             flash(str(e), 'error')
-    
-    return render_template('configs/form.html', 
-                           domain=domain, 
+
+    return render_template('configs/form.html',
+                           domain=domain,
                            config=config,
                            available_languages=[])
 
@@ -224,5 +224,5 @@ def config_delete(domain_id, language):
         flash(f"配置 ({language}) 已删除", 'success')
     except NotFoundError as e:
         flash(str(e), 'error')
-    
+
     return redirect(url_for('admin.config_list', domain_id=domain_id))

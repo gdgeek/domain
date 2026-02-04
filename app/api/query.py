@@ -18,7 +18,7 @@ query_result = ns.model('QueryResult', {
 @ns.route('')
 class QueryResource(Resource):
     """Query config by domain and language."""
-    
+
     @ns.doc('query_config')
     @ns.param('domain', '域名', required=True, example='example.com')
     @ns.param('lang', '语言代码', required=False, example='en')
@@ -26,16 +26,16 @@ class QueryResource(Resource):
     def get(self):
         """
         查询域名配置
-        
+
         支持语言回退：如果请求的语言配置不存在，会自动回退到默认语言 (zh-CN)。
         响应中的 is_fallback 字段表示是否发生了回退。
         """
         domain = request.args.get('domain')
         language = request.args.get('lang')
-        
+
         if not domain:
             from app.services import ValidationError
             raise ValidationError("缺少必需参数: domain")
-        
+
         result = config_service.get_config_with_fallback(domain, language)
         return result

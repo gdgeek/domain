@@ -25,13 +25,13 @@ api = Api(
 )
 
 # Register error handlers
-from app.api.errors import register_error_handlers
+from app.api.errors import register_error_handlers  # noqa: E402
 register_error_handlers(api)
 
 # Import and register namespaces
-from app.api.domains import ns as domains_ns
-from app.api.configs import ns as configs_ns
-from app.api.query import ns as query_ns
+from app.api.domains import ns as domains_ns  # noqa: E402
+from app.api.configs import ns as configs_ns  # noqa: E402
+from app.api.query import ns as query_ns  # noqa: E402
 
 api.add_namespace(domains_ns, path='/domains')
 api.add_namespace(configs_ns, path='/domains')

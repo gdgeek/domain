@@ -12,16 +12,16 @@ def require_api_auth(f):
         # No password configured = no auth required
         if not admin_password:
             return f(*args, **kwargs)
-        
+
         # Check Authorization header (Basic auth with password only)
         auth = request.authorization
         if auth and auth.password == admin_password:
             return f(*args, **kwargs)
-        
+
         # Check X-Admin-Password header
         header_password = request.headers.get('X-Admin-Password')
         if header_password == admin_password:
             return f(*args, **kwargs)
-        
+
         abort(401, '需要认证')
     return decorated_function

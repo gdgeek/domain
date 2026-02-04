@@ -24,7 +24,7 @@ def test_list_domains(client):
     client.post('/api/domains',
                 data=json.dumps({'name': 'test.com'}),
                 content_type='application/json')
-    
+
     response = client.get('/api/domains')
     assert response.status_code == 200
     data = json.loads(response.data)
@@ -38,7 +38,7 @@ def test_create_config(client):
                        data=json.dumps({'name': 'test.com'}),
                        content_type='application/json')
     domain_id = json.loads(resp.data)['id']
-    
+
     # Create config
     response = client.post(f'/api/domains/{domain_id}/configs',
                            data=json.dumps({
@@ -59,27 +59,27 @@ def test_query_config(client):
                        data=json.dumps({'name': 'test.com'}),
                        content_type='application/json')
     domain_id = json.loads(resp.data)['id']
-    
+
     client.post(f'/api/domains/{domain_id}/configs',
                 data=json.dumps({
                     'language': 'zh-CN',
                     'data': {'title': '中文标题'}
                 }),
                 content_type='application/json')
-    
+
     # Query with zh-CN
     response = client.get('/api/query?domain=test.com&lang=zh-CN')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['language'] == 'zh-CN'
-    assert data['is_fallback'] == False
-    
+    assert data['is_fallback'] is False
+
     # Query with en (should fallback to zh-CN)
     response = client.get('/api/query?domain=test.com&lang=en')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['language'] == 'zh-CN'
-    assert data['is_fallback'] == True
+    assert data['is_fallback'] is True
 
 
 def test_domain_not_found(client):
@@ -93,7 +93,7 @@ def test_duplicate_domain(client):
     client.post('/api/domains',
                 data=json.dumps({'name': 'test.com'}),
                 content_type='application/json')
-    
+
     response = client.post('/api/domains',
                            data=json.dumps({'name': 'test.com'}),
                            content_type='application/json')
