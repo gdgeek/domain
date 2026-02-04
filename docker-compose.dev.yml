@@ -1,30 +1,45 @@
-# Development override - use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-      # Mount local code for hot reload
-      - ./app:/app/app:ro
-      - ./config.py:/app/config.py:ro
-      - ./run.py:/app/run.py:ro
-      - ./migrations:/app/migrations:ro
+      - .:/app
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - FLASK_APP=run:app
       - SECRET_KEY=dev-secret-key
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=domain_config
+      - DB_USER=root
+      - DB_PASSWORD=dev123
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ADMIN_PASSWORD=admin123
     ports:
       - "5000:5000"
-    # Override command for development with auto-reload
-    command: ["python", "run.py"]
+    depends_on:
+      - db
+      - redis
+    command: sh -c "flask db upgrade && flask run --host=0.0.0.0 --reload"
 
   db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: dev123
+      MYSQL_DATABASE: domain_config
     ports:
-      - "5432:5432"
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   redis:
+    image: redis:7-alpine
     ports:
       - "6379:6379"
+
+volumes:
+  mysql_data:

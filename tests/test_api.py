@@ -8,6 +8,21 @@ def test_api_docs_accessible(client):
     assert response.status_code == 200
 
 
+def test_health_check(client):
+    """Test health check endpoint."""
+    response = client.get('/api/health')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['status'] == 'ok'
+
+
+def test_env_check_page(client):
+    """Test environment check page."""
+    response = client.get('/admin/env')
+    assert response.status_code == 200
+    assert b'DATABASE' in response.data or b'REDIS' in response.data
+
+
 def test_create_domain(client):
     """Test creating a domain."""
     response = client.post('/api/domains',
