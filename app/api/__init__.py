@@ -36,3 +36,10 @@ from app.api.query import ns as query_ns  # noqa: E402
 api.add_namespace(domains_ns, path='/domains')
 api.add_namespace(configs_ns, path='/domains')
 api.add_namespace(query_ns, path='/query')
+
+
+# Health check endpoint
+@api_bp.route('/health')
+def health():
+    """健康检查端点"""
+    return {'status': 'ok'}
