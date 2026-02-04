@@ -36,6 +36,7 @@ RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Environment
+ENV FLASK_APP=run:app
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
