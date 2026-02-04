@@ -41,6 +41,7 @@ class TestingConfig(Config):
     """Testing configuration."""
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    ADMIN_PASSWORD = None  # 测试环境禁用认证
 
 
 class ProductionConfig(Config):
