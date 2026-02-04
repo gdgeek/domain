@@ -13,9 +13,9 @@ on:
 
 env:
   # 腾讯云镜像仓库配置
-  TCR_REGISTRY: ccr.ccs.tencentyun.com
-  TCR_NAMESPACE: ${{ secrets.TCR_NAMESPACE }}
-  IMAGE_NAME: domain-config
+  TCR_REGISTRY: hkccr.ccs.tencentyun.com
+  TCR_NAMESPACE: gdgeek
+  IMAGE_NAME: domain
 
 jobs:
   ci:
@@ -91,4 +91,4 @@ jobs:
           echo "## 🚀 部署完成" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "镜像已推送到腾讯云:" >> $GITHUB_STEP_SUMMARY
-          echo "\`${{ env.TCR_REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.version || 'latest' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
