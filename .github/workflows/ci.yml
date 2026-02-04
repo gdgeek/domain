@@ -63,15 +63,20 @@ jobs:
           username: ${{ secrets.TENCENT_DOCKER_USERNAME }}
           password: ${{ secrets.TENCENT_DOCKER_PASSWORD }}
 
-      - name: Extract version
-        id: version
+      - name: Extract metadata
+        id: meta
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+          # 短 hash
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          
+          # 分支名或 tag 名
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            REF_NAME=${GITHUB_REF#refs/tags/}
           else
-            VERSION=${{ github.event.inputs.tag || 'latest' }}
+            REF_NAME=${GITHUB_REF#refs/heads/}
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -79,8 +84,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
             ${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.ref_name }}
+            ${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.short_sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
