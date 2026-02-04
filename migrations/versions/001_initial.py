@@ -22,10 +22,12 @@ def upgrade():
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=True, default=True),
+        sa.Column('fallback_domain_id', sa.Integer(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('name')
+        sa.UniqueConstraint('name'),
+        sa.ForeignKeyConstraint(['fallback_domain_id'], ['domains.id'], ondelete='SET NULL')
     )
     op.create_index('idx_domains_name', 'domains', ['name'])
     op.create_index('idx_domains_active', 'domains', ['is_active'])

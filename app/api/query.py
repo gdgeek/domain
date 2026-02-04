@@ -7,10 +7,12 @@ ns = Namespace('query', description='配置查询')
 
 # Models for Swagger documentation
 query_result = ns.model('QueryResult', {
-    'domain': fields.String(description='域名'),
+    'domain': fields.String(description='请求的域名'),
+    'actual_domain': fields.String(description='实际返回配置的域名'),
     'language': fields.String(description='实际返回的语言'),
     'requested_language': fields.String(description='请求的语言'),
     'is_fallback': fields.Boolean(description='是否回退到默认语言'),
+    'is_domain_fallback': fields.Boolean(description='是否回退到其他域名'),
     'data': fields.Raw(description='配置数据')
 })
 

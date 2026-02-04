@@ -49,13 +49,18 @@ class DomainService:
         return name
 
     def create_domain(self, name: str, description: str = None,
-                      is_active: bool = True) -> Domain:
+                      is_active: bool = True, fallback_domain_id: int = None) -> Domain:
         """Create a new domain."""
         name = self._validate_name(name)
         existing = self.domain_repository.get_by_name(name)
         if existing:
             raise DuplicateError(f"域名 '{name}' 已存在")
-        return self.domain_repository.create(name, description, is_active)
+        # 验证回退域名存在
+        if fallback_domain_id:
+            fallback = self.domain_repository.get_by_id(fallback_domain_id)
+            if not fallback:
+                raise ValidationError(f"回退域名 ID {fallback_domain_id} 不存在")
+        return self.domain_repository.create(name, description, is_active, fallback_domain_id)
 
     def get_domain(self, domain_id: int) -> Domain:
         """Get domain by ID."""
@@ -76,7 +81,8 @@ class DomainService:
         return self.domain_repository.get_all(active_only)
 
     def update_domain(self, domain_id: int, name: str = None,
-                      description: str = None, is_active: bool = None) -> Domain:
+                      description: str = None, is_active: bool = None,
+                      fallback_domain_id: int = None) -> Domain:
         """Update domain."""
         domain = self.get_domain(domain_id)
         old_name = domain.name
@@ -86,7 +92,14 @@ class DomainService:
                 existing = self.domain_repository.get_by_name(name)
                 if existing:
                     raise DuplicateError(f"域名 '{name}' 已存在")
-        updated = self.domain_repository.update(domain_id, name, description, is_active)
+        # 验证回退域名
+        if fallback_domain_id:
+            if fallback_domain_id == domain_id:
+                raise ValidationError("不能将自己设为回退域名")
+            fallback = self.domain_repository.get_by_id(fallback_domain_id)
+            if not fallback:
+                raise ValidationError(f"回退域名 ID {fallback_domain_id} 不存在")
+        updated = self.domain_repository.update(domain_id, name, description, is_active, fallback_domain_id)
         if name and name != old_name:
             self.cache_service.invalidate(old_name)
         return updated

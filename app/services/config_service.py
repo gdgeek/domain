@@ -67,7 +67,7 @@ class ConfigService:
         return config
 
     def get_config_with_fallback(self, domain_name: str, language: str = None) -> Dict[str, Any]:
-        """Get config with language fallback."""
+        """Get config with language and domain fallback."""
         default_lang = current_app.config.get('DEFAULT_LANGUAGE', 'zh-CN')
         language = language or default_lang
         cached = self.cache_service.get(domain_name, language)
@@ -78,18 +78,51 @@ class ConfigService:
             raise NotFoundError(f"域名 '{domain_name}' 不存在")
         if not domain.is_active:
             raise NotFoundError(f"域名 '{domain_name}' 已禁用")
-        config = self.config_repository.get_by_domain_and_language(domain.id, language)
+
+        # 尝试获取配置，支持域名回退
+        config = None
+        actual_domain = domain
         actual_language = language
+        is_domain_fallback = False
+
+        # 1. 先查当前域名的请求语言
+        config = self.config_repository.get_by_domain_and_language(domain.id, language)
+
+        # 2. 当前域名的默认语言
         if not config and language != default_lang:
             config = self.config_repository.get_by_domain_and_language(domain.id, default_lang)
             actual_language = default_lang
+
+        # 3. 回退域名的请求语言
+        if not config and domain.fallback_domain_id:
+            fallback = domain.fallback_domain
+            if fallback and fallback.is_active:
+                config = self.config_repository.get_by_domain_and_language(fallback.id, language)
+                if config:
+                    actual_domain = fallback
+                    actual_language = language
+                    is_domain_fallback = True
+
+        # 4. 回退域名的默认语言
+        if not config and domain.fallback_domain_id:
+            fallback = domain.fallback_domain
+            if fallback and fallback.is_active:
+                config = self.config_repository.get_by_domain_and_language(fallback.id, default_lang)
+                if config:
+                    actual_domain = fallback
+                    actual_language = default_lang
+                    is_domain_fallback = True
+
         if not config:
             raise NotFoundError(f"域名 '{domain_name}' 没有配置")
+
         result = {
             'domain': domain_name,
+            'actual_domain': actual_domain.name,
             'language': actual_language,
             'requested_language': language,
             'is_fallback': actual_language != language,
+            'is_domain_fallback': is_domain_fallback,
             'data': config.data
         }
         self.cache_service.set(domain_name, language, result)

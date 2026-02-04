@@ -15,6 +15,7 @@
             <tr>
                 <th>ID</th>
                 <th>域名</th>
+                <th>回退域名</th>
                 <th>描述</th>
                 <th>状态</th>
                 <th>创建时间</th>
@@ -29,6 +30,13 @@
                     <a href="{{ url_for('admin.config_list', domain_id=domain.id) }}">
                         {{ domain.name }}
                     </a>
+                </td>
+                <td class="text-muted">
+                    {% if domain.fallback_domain %}
+                        → {{ domain.fallback_domain.name }}
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
                 <td class="text-muted">{{ domain.description or '-' }}</td>
                 <td>

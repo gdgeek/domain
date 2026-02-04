@@ -69,17 +69,20 @@ def domain_create():
     """Create new domain."""
     if request.method == 'POST':
         try:
+            fallback_id = request.form.get('fallback_domain_id')
             domain = domain_service.create_domain(
                 name=request.form.get('name'),
                 description=request.form.get('description'),
-                is_active=request.form.get('is_active') == 'on'
+                is_active=request.form.get('is_active') == 'on',
+                fallback_domain_id=int(fallback_id) if fallback_id else None
             )
             flash(f"域名 '{domain.name}' 创建成功", 'success')
             return redirect(url_for('admin.domain_list'))
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
 
-    return render_template('domains/form.html', domain=None)
+    all_domains = domain_service.list_domains()
+    return render_template('domains/form.html', domain=None, all_domains=all_domains)
 
 
 @admin_bp.route('/domains/<int:id>/edit', methods=['GET', 'POST'])
@@ -94,18 +97,21 @@ def domain_edit(id):
 
     if request.method == 'POST':
         try:
+            fallback_id = request.form.get('fallback_domain_id')
             domain = domain_service.update_domain(
                 domain_id=id,
                 name=request.form.get('name'),
                 description=request.form.get('description'),
-                is_active=request.form.get('is_active') == 'on'
+                is_active=request.form.get('is_active') == 'on',
+                fallback_domain_id=int(fallback_id) if fallback_id else None
             )
             flash(f"域名 '{domain.name}' 更新成功", 'success')
             return redirect(url_for('admin.domain_list'))
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
 
-    return render_template('domains/form.html', domain=domain)
+    all_domains = domain_service.list_domains()
+    return render_template('domains/form.html', domain=domain, all_domains=all_domains)
 
 
 @admin_bp.route('/domains/<int:id>/delete', methods=['POST'])
@@ -235,25 +241,31 @@ def env_check():
     import os
 
     env_vars = [
-        # 数据库配置
+        # 数据库配置 - 方式一：完整 URL
         {'name': 'DATABASE_URL', 'required': False, 'default': 'sqlite:///data/app.db',
-         'desc': '完整数据库连接 URL（优先级高于分开配置）', 'group': '数据库'},
+         'desc': '完整数据库连接 URL', 'group': '数据库（方式一：URL）',
+         'note': '设置此项则忽略 DB_* 配置'},
+
+        # 数据库配置 - 方式二：分开配置
         {'name': 'DB_HOST', 'required': False, 'default': '-',
-         'desc': 'MySQL 主机地址', 'group': '数据库'},
+         'desc': 'MySQL 主机地址', 'group': '数据库（方式二：分开配置）',
+         'note': '设置后自动构建 MySQL 连接'},
         {'name': 'DB_PORT', 'required': False, 'default': '3306',
-         'desc': 'MySQL 端口', 'group': '数据库'},
+         'desc': 'MySQL 端口', 'group': '数据库（方式二：分开配置）'},
         {'name': 'DB_NAME', 'required': False, 'default': 'domain_config',
-         'desc': '数据库名', 'group': '数据库'},
+         'desc': '数据库名', 'group': '数据库（方式二：分开配置）'},
         {'name': 'DB_USER', 'required': False, 'default': 'root',
-         'desc': '数据库用户名', 'group': '数据库'},
+         'desc': '数据库用户名', 'group': '数据库（方式二：分开配置）'},
         {'name': 'DB_PASSWORD', 'required': False, 'default': '-',
-         'desc': '数据库密码', 'group': '数据库'},
+         'desc': '数据库密码', 'group': '数据库（方式二：分开配置）'},
 
         # Redis 配置
         {'name': 'REDIS_ENABLED', 'required': False, 'default': 'false',
-         'desc': '是否启用 Redis 缓存', 'group': 'Redis'},
+         'desc': '是否启用 Redis 缓存', 'group': 'Redis',
+         'note': '设为 true/1/yes 启用'},
         {'name': 'REDIS_URL', 'required': False, 'default': '-',
-         'desc': '完整 Redis 连接 URL', 'group': 'Redis'},
+         'desc': '完整 Redis 连接 URL', 'group': 'Redis',
+         'note': '设置此项则忽略 REDIS_HOST 等'},
         {'name': 'REDIS_HOST', 'required': False, 'default': 'localhost',
          'desc': 'Redis 主机地址', 'group': 'Redis'},
         {'name': 'REDIS_PORT', 'required': False, 'default': '6379',
@@ -265,11 +277,9 @@ def env_check():
 
         # 应用配置
         {'name': 'SECRET_KEY', 'required': False, 'default': 'dev-secret-key',
-         'desc': 'Flask 密钥', 'group': '应用'},
+         'desc': 'Flask 密钥（生产环境必须修改）', 'group': '应用'},
         {'name': 'ADMIN_PASSWORD', 'required': False, 'default': 'admin123',
          'desc': 'API/管理界面密码', 'group': '应用'},
-        {'name': 'FLASK_ENV', 'required': False, 'default': 'production',
-         'desc': '运行环境', 'group': '应用'},
     ]
 
     # 获取当前值

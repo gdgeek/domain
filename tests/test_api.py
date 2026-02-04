@@ -113,3 +113,39 @@ def test_duplicate_domain(client):
                            data=json.dumps({'name': 'test.com'}),
                            content_type='application/json')
     assert response.status_code == 409
+
+
+def test_domain_fallback(client):
+    """Test domain fallback when config not found."""
+    # Create main domain with config
+    resp = client.post('/api/domains',
+                       data=json.dumps({'name': 'example.com'}),
+                       content_type='application/json')
+    main_domain_id = json.loads(resp.data)['id']
+
+    client.post(f'/api/domains/{main_domain_id}/configs',
+                data=json.dumps({
+                    'language': 'zh-CN',
+                    'data': {'title': '主域名配置'}
+                }),
+                content_type='application/json')
+
+    # Create sub domain with fallback to main domain (no config)
+    resp = client.post('/api/domains',
+                       data=json.dumps({
+                           'name': 'api.example.com',
+                           'fallback_domain_id': main_domain_id
+                       }),
+                       content_type='application/json')
+    assert resp.status_code == 201
+    sub_domain = json.loads(resp.data)
+    assert sub_domain['fallback_domain_id'] == main_domain_id
+
+    # Query sub domain - should fallback to main domain's config
+    response = client.get('/api/query?domain=api.example.com&lang=zh-CN')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['domain'] == 'api.example.com'
+    assert data['actual_domain'] == 'example.com'
+    assert data['is_domain_fallback'] is True
+    assert data['data']['title'] == '主域名配置'

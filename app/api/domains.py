@@ -12,6 +12,8 @@ domain_model = ns.model('Domain', {
     'name': fields.String(required=True, description='域名', example='example.com'),
     'description': fields.String(description='描述'),
     'is_active': fields.Boolean(description='是否启用', default=True),
+    'fallback_domain_id': fields.Integer(description='回退域名ID'),
+    'fallback_domain_name': fields.String(readonly=True, description='回退域名'),
     'created_at': fields.String(readonly=True, description='创建时间'),
     'updated_at': fields.String(readonly=True, description='更新时间')
 })
@@ -19,13 +21,15 @@ domain_model = ns.model('Domain', {
 domain_input = ns.model('DomainInput', {
     'name': fields.String(required=True, description='域名', example='example.com'),
     'description': fields.String(description='描述'),
-    'is_active': fields.Boolean(description='是否启用', default=True)
+    'is_active': fields.Boolean(description='是否启用', default=True),
+    'fallback_domain_id': fields.Integer(description='回退域名ID')
 })
 
 domain_update = ns.model('DomainUpdate', {
     'name': fields.String(description='域名'),
     'description': fields.String(description='描述'),
-    'is_active': fields.Boolean(description='是否启用')
+    'is_active': fields.Boolean(description='是否启用'),
+    'fallback_domain_id': fields.Integer(description='回退域名ID')
 })
 
 
@@ -53,7 +57,8 @@ class DomainList(Resource):
         domain = domain_service.create_domain(
             name=data.get('name'),
             description=data.get('description'),
-            is_active=data.get('is_active', True)
+            is_active=data.get('is_active', True),
+            fallback_domain_id=data.get('fallback_domain_id')
         )
         return domain.to_dict(), 201
 
@@ -82,7 +87,8 @@ class DomainResource(Resource):
             domain_id=id,
             name=data.get('name'),
             description=data.get('description'),
-            is_active=data.get('is_active')
+            is_active=data.get('is_active'),
+            fallback_domain_id=data.get('fallback_domain_id')
         )
         return domain.to_dict()
 
