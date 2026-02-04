@@ -57,8 +57,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.TCR_REGISTRY }}
-          username: ${{ secrets.TCR_USERNAME }}
-          password: ${{ secrets.TCR_PASSWORD }}
+          username: ${{ secrets.TENCENT_DOCKER_USERNAME }}
+          password: ${{ secrets.TENCENT_DOCKER_PASSWORD }}
       
       - name: Extract version from tag
         id: version
@@ -81,14 +81,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy-notify:
-    name: 部署通知
+  deploy:
+    name: 部署到 Portainer
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
+      - name: Trigger Portainer Webhook
+        run: |
+          curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
+      
       - name: Deploy summary
         run: |
           echo "## 🚀 部署完成" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "镜像已推送到腾讯云:" >> $GITHUB_STEP_SUMMARY
           echo "\`${{ env.TCR_REGISTRY }}/${{ env.TCR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Portainer Webhook 已触发" >> $GITHUB_STEP_SUMMARY
