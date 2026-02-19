@@ -13,6 +13,13 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Enable CORS
+    from flask_cors import CORS
+    CORS(app, resources={
+        r"/api/query": {"origins": "*"},
+        r"/api/health": {"origins": "*"}
+    })
+
     # Register blueprints
     from app.api import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')

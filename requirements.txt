@@ -24,3 +24,4 @@ gunicorn==21.2.0
 
 # Environment
 python-dotenv==1.0.0
+Flask-Cors==4.0.0
