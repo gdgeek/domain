@@ -5,6 +5,7 @@ Create Date: 2024-01-01
 """
 from alembic import op
 import sqlalchemy as sa
+from alembic import context
 
 
 # revision identifiers
@@ -14,21 +15,34 @@ branch_labels = None
 depends_on = None
 
 
-def _create_index_if_not_exists(bind, index_name, table_name, columns):
-    """Create index only if it doesn't already exist."""
+def _table_exists(table_name, bind):
+    """Check if table exists, safe for both online and offline mode."""
+    if context.is_offline_mode():
+        return False
+    inspector = sa.inspect(bind)
+    return table_name in set(inspector.get_table_names())
+
+
+def _index_exists(index_name, table_name, bind):
+    """Check if index exists, safe for both online and offline mode."""
+    if context.is_offline_mode():
+        return False
     inspector = sa.inspect(bind)
     existing = {idx['name'] for idx in inspector.get_indexes(table_name)}
-    if index_name not in existing:
+    return index_name in existing
+
+
+def _create_index_if_not_exists(bind, index_name, table_name, columns):
+    """Create index only if it doesn't already exist."""
+    if not _index_exists(index_name, table_name, bind):
         op.create_index(index_name, table_name, columns)
 
 
 def upgrade():
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
 
     # Create domains table (idempotent)
-    if 'domains' not in existing_tables:
+    if not _table_exists('domains', bind):
         op.create_table(
             'domains',
             sa.Column('id', sa.Integer(), nullable=False),
@@ -46,7 +60,7 @@ def upgrade():
     _create_index_if_not_exists(bind, 'idx_domains_active', 'domains', ['is_active'])
 
     # Create configs table (idempotent)
-    if 'configs' not in existing_tables:
+    if not _table_exists('configs', bind):
         op.create_table(
             'configs',
             sa.Column('id', sa.Integer(), nullable=False),
