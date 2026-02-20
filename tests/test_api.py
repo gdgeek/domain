@@ -68,7 +68,7 @@ def test_create_config(client):
 
 
 def test_query_config(client):
-    """Test querying config with language fallback."""
+    """Test querying language config with language fallback."""
     # Create domain and config
     resp = client.post('/api/domains',
                        data=json.dumps({'name': 'test.com'}),
@@ -83,14 +83,14 @@ def test_query_config(client):
                 content_type='application/json')
 
     # Query with zh-CN
-    response = client.get('/api/query?domain=test.com&lang=zh-CN')
+    response = client.get('/api/query/language?domain=test.com&lang=zh-CN')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['language'] == 'zh-CN'
     assert data['is_fallback'] is False
 
     # Query with en (should fallback to zh-CN)
-    response = client.get('/api/query?domain=test.com&lang=en')
+    response = client.get('/api/query/language?domain=test.com&lang=en')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['language'] == 'zh-CN'
@@ -142,10 +142,126 @@ def test_domain_fallback(client):
     assert sub_domain['fallback_domain_id'] == main_domain_id
 
     # Query sub domain - should fallback to main domain's config
-    response = client.get('/api/query?domain=api.example.com&lang=zh-CN')
+    response = client.get('/api/query/language?domain=api.example.com&lang=zh-CN')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['domain'] == 'api.example.com'
     assert data['actual_domain'] == 'example.com'
     assert data['is_domain_fallback'] is True
     assert data['data']['title'] == '主域名配置'
+
+
+def test_query_language_config_does_not_mix_default_config(client):
+    """Test language query returns language config only (no default config mix)."""
+    resp = client.post('/api/domains',
+                       data=json.dumps({
+                           'name': 'merge.com',
+                           'default_config': {
+                               'site_name': '主站',
+                               'theme': 'light',
+                               'cdn': 'https://cdn.example.com'
+                           }
+                       }),
+                       content_type='application/json')
+    domain_id = json.loads(resp.data)['id']
+
+    client.post(f'/api/domains/{domain_id}/configs',
+                data=json.dumps({
+                    'language': 'zh-CN',
+                    'data': {
+                        'title': '中文标题',
+                        'theme': 'dark'
+                    }
+                }),
+                content_type='application/json')
+
+    response = client.get('/api/query/language?domain=merge.com&lang=zh-CN')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['language'] == 'zh-CN'
+    assert data['data']['title'] == '中文标题'
+    assert data['data']['theme'] == 'dark'
+    assert 'site_name' not in data['data']
+    assert 'cdn' not in data['data']
+
+
+def test_query_default_config_without_language_config(client):
+    """Test default query returns default_config when no language config exists."""
+    client.post('/api/domains',
+                data=json.dumps({
+                    'name': 'default-only.com',
+                    'default_config': {
+                        'site_name': '默认站点',
+                        'logo': '/logo.png'
+                    }
+                }),
+                content_type='application/json')
+
+    response = client.get('/api/query/default?domain=default-only.com')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['language'] == 'default'
+    assert data['is_fallback'] is False
+    assert data['data']['site_name'] == '默认站点'
+    assert data['data']['logo'] == '/logo.png'
+
+
+def test_query_default_only(client):
+    """Test /query/default returns only domain default config."""
+    resp = client.post('/api/domains',
+                       data=json.dumps({
+                           'name': 'expand-default.com',
+                           'default_config': {
+                               'site_name': '默认站点',
+                               'theme': 'light'
+                           }
+                       }),
+                       content_type='application/json')
+    domain_id = json.loads(resp.data)['id']
+
+    client.post(f'/api/domains/{domain_id}/configs',
+                data=json.dumps({
+                    'language': 'zh-CN',
+                    'data': {
+                        'theme': 'dark',
+                        'title': '语言标题'
+                    }
+                }),
+                content_type='application/json')
+
+    response = client.get('/api/query/default?domain=expand-default.com')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['data']['theme'] == 'light'
+    assert 'title' not in data['data']
+
+
+def test_query_language_only(client):
+    """Test /query/language returns only language config."""
+    resp = client.post('/api/domains',
+                       data=json.dumps({
+                           'name': 'expand-language.com',
+                           'default_config': {
+                               'site_name': '默认站点',
+                               'theme': 'light'
+                           }
+                       }),
+                       content_type='application/json')
+    domain_id = json.loads(resp.data)['id']
+
+    client.post(f'/api/domains/{domain_id}/configs',
+                data=json.dumps({
+                    'language': 'zh-CN',
+                    'data': {
+                        'theme': 'dark',
+                        'title': '语言标题'
+                    }
+                }),
+                content_type='application/json')
+
+    response = client.get('/api/query/language?domain=expand-language.com&lang=zh-CN')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['data']['theme'] == 'dark'
+    assert data['data']['title'] == '语言标题'
+    assert 'site_name' not in data['data']

@@ -7,10 +7,11 @@ from app.models.domain import Domain
 class DomainRepository:
     """Repository for Domain CRUD operations."""
 
-    def create(self, name: str, description: str = None, is_active: bool = True,
-               fallback_domain_id: int = None) -> Domain:
+    def create(self, name: str, description: str = None, default_config: dict = None,
+               is_active: bool = True, fallback_domain_id: int = None) -> Domain:
         """Create a new domain."""
-        domain = Domain(name=name, description=description, is_active=is_active,
+        domain = Domain(name=name, description=description,
+                        default_config=default_config or {}, is_active=is_active,
                         fallback_domain_id=fallback_domain_id)
         db.session.add(domain)
         db.session.commit()
@@ -32,7 +33,7 @@ class DomainRepository:
         return query.order_by(Domain.id.desc()).all()
 
     def update(self, domain_id: int, name: str = None,
-               description: str = None, is_active: bool = None,
+               description: str = None, default_config: dict = None, is_active: bool = None,
                fallback_domain_id: int = None) -> Optional[Domain]:
         """Update domain."""
         domain = self.get_by_id(domain_id)
@@ -43,6 +44,8 @@ class DomainRepository:
             domain.name = name
         if description is not None:
             domain.description = description
+        if default_config is not None:
+            domain.default_config = default_config
         if is_active is not None:
             domain.is_active = is_active
         # fallback_domain_id 可以设为 None（清除回退）

@@ -10,6 +10,7 @@ class Domain(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
+    default_config = db.Column(db.JSON, nullable=False, default=dict)
     is_active = db.Column(db.Boolean, default=True, index=True)
     fallback_domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -28,6 +29,7 @@ class Domain(db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'default_config': self.default_config,
             'is_active': self.is_active,
             'fallback_domain_id': self.fallback_domain_id,
             'fallback_domain_name': self.fallback_domain.name if self.fallback_domain else None,

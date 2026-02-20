@@ -11,6 +11,7 @@ domain_model = ns.model('Domain', {
     'id': fields.Integer(readonly=True, description='域名ID'),
     'name': fields.String(required=True, description='域名', example='example.com'),
     'description': fields.String(description='描述'),
+    'default_config': fields.Raw(description='默认配置 (JSON，语言无关)'),
     'is_active': fields.Boolean(description='是否启用', default=True),
     'fallback_domain_id': fields.Integer(description='回退域名ID'),
     'fallback_domain_name': fields.String(readonly=True, description='回退域名'),
@@ -21,6 +22,7 @@ domain_model = ns.model('Domain', {
 domain_input = ns.model('DomainInput', {
     'name': fields.String(required=True, description='域名', example='example.com'),
     'description': fields.String(description='描述'),
+    'default_config': fields.Raw(description='默认配置 (JSON，语言无关)'),
     'is_active': fields.Boolean(description='是否启用', default=True),
     'fallback_domain_id': fields.Integer(description='回退域名ID')
 })
@@ -28,6 +30,7 @@ domain_input = ns.model('DomainInput', {
 domain_update = ns.model('DomainUpdate', {
     'name': fields.String(description='域名'),
     'description': fields.String(description='描述'),
+    'default_config': fields.Raw(description='默认配置 (JSON，语言无关)'),
     'is_active': fields.Boolean(description='是否启用'),
     'fallback_domain_id': fields.Integer(description='回退域名ID')
 })
@@ -57,6 +60,7 @@ class DomainList(Resource):
         domain = domain_service.create_domain(
             name=data.get('name'),
             description=data.get('description'),
+            default_config=data.get('default_config', {}),
             is_active=data.get('is_active', True),
             fallback_domain_id=data.get('fallback_domain_id')
         )
@@ -87,6 +91,7 @@ class DomainResource(Resource):
             domain_id=id,
             name=data.get('name'),
             description=data.get('description'),
+            default_config=data.get('default_config'),
             is_active=data.get('is_active'),
             fallback_domain_id=data.get('fallback_domain_id')
         )

@@ -70,14 +70,19 @@ def domain_create():
     if request.method == 'POST':
         try:
             fallback_id = request.form.get('fallback_domain_id')
+            default_config_str = request.form.get('default_config', '{}')
+            default_config = json.loads(default_config_str) if default_config_str else {}
             domain = domain_service.create_domain(
                 name=request.form.get('name'),
                 description=request.form.get('description'),
+                default_config=default_config,
                 is_active=request.form.get('is_active') == 'on',
                 fallback_domain_id=int(fallback_id) if fallback_id else None
             )
             flash(f"域名 '{domain.name}' 创建成功", 'success')
             return redirect(url_for('admin.domain_list'))
+        except json.JSONDecodeError:
+            flash("默认配置必须是有效的 JSON 格式", 'error')
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
 
@@ -98,15 +103,20 @@ def domain_edit(id):
     if request.method == 'POST':
         try:
             fallback_id = request.form.get('fallback_domain_id')
+            default_config_str = request.form.get('default_config', '{}')
+            default_config = json.loads(default_config_str) if default_config_str else {}
             domain = domain_service.update_domain(
                 domain_id=id,
                 name=request.form.get('name'),
                 description=request.form.get('description'),
+                default_config=default_config,
                 is_active=request.form.get('is_active') == 'on',
                 fallback_domain_id=int(fallback_id) if fallback_id else None
             )
             flash(f"域名 '{domain.name}' 更新成功", 'success')
             return redirect(url_for('admin.domain_list'))
+        except json.JSONDecodeError:
+            flash("默认配置必须是有效的 JSON 格式", 'error')
         except (ValidationError, DuplicateError) as e:
             flash(str(e), 'error')
 

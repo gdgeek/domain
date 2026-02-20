@@ -1,31 +1,41 @@
 # 外部系统调用指南
 
-本服务提供了一个公开的 HTTP GET 接口，允许外部系统通过域名获取配置信息。
+本服务提供了两个公开的 HTTP GET 接口，允许外部系统按需获取两类配置。
 
 ## 接口地址
 
-`GET /api/query`
+- `GET /api/query/language`：查询语言配置（支持语言回退、域名回退）
+- `GET /api/query/default`：查询默认配置（语言无关）
 
 ## 请求参数
+
+### `GET /api/query/language` 参数
 
 | 参数名   | 类型   | 必填 | 说明                    | 示例             |
 | :------- | :----- | :--- | :---------------------- | :--------------- |
 | `domain` | string | 是   | 需要查询的域名          | `example.com`    |
 | `lang`   | string | 否   | 语言代码 (默认 `zh-CN`) | `en-US`, `ja-JP` |
 
+### `GET /api/query/default` 参数
+
+| 参数名   | 类型   | 必填 | 说明           | 示例          |
+| :------- | :----- | :--- | :------------- | :------------ |
+| `domain` | string | 是   | 需要查询的域名 | `example.com` |
+
 ## 调用示例
 
 ### cURL
 
 ```bash
-curl "http://localhost:5000/api/query?domain=example.com&lang=en-US"
+curl "http://localhost:5000/api/query/language?domain=example.com&lang=en-US"
+curl "http://localhost:5000/api/query/default?domain=example.com"
 ```
 
 ### JavaScript (Fetch)
 
 ```javascript
-const getDomainConfig = async (domain, lang = "zh-CN") => {
-  const url = new URL("http://localhost:5000/api/query");
+const getLanguageConfig = async (domain, lang = "zh-CN") => {
+  const url = new URL("http://localhost:5000/api/query/language");
   url.searchParams.append("domain", domain);
   url.searchParams.append("lang", lang);
 
@@ -42,8 +52,26 @@ const getDomainConfig = async (domain, lang = "zh-CN") => {
   }
 };
 
+const getDefaultConfig = async (domain) => {
+  const url = new URL("http://localhost:5000/api/query/default");
+  url.searchParams.append("domain", domain);
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Failed to fetch default config:", error);
+    return null;
+  }
+};
+
 // 使用示例
-getDomainConfig("example.com", "en-US").then((data) => console.log(data));
+getLanguageConfig("example.com", "en-US").then((data) => console.log(data));
+getDefaultConfig("example.com").then((data) => console.log(data));
 ```
 
 ## 响应格式

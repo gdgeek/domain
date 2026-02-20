@@ -48,7 +48,7 @@ class DomainService:
             raise ValidationError("域名长度不能超过255个字符")
         return name
 
-    def create_domain(self, name: str, description: str = None,
+    def create_domain(self, name: str, description: str = None, default_config: dict = None,
                       is_active: bool = True, fallback_domain_id: int = None) -> Domain:
         """Create a new domain."""
         name = self._validate_name(name)
@@ -60,7 +60,9 @@ class DomainService:
             fallback = self.domain_repository.get_by_id(fallback_domain_id)
             if not fallback:
                 raise ValidationError(f"回退域名 ID {fallback_domain_id} 不存在")
-        return self.domain_repository.create(name, description, is_active, fallback_domain_id)
+        return self.domain_repository.create(
+            name, description, default_config or {}, is_active, fallback_domain_id
+        )
 
     def get_domain(self, domain_id: int) -> Domain:
         """Get domain by ID."""
@@ -81,7 +83,7 @@ class DomainService:
         return self.domain_repository.get_all(active_only)
 
     def update_domain(self, domain_id: int, name: str = None,
-                      description: str = None, is_active: bool = None,
+                      description: str = None, default_config: dict = None, is_active: bool = None,
                       fallback_domain_id: int = None) -> Domain:
         """Update domain."""
         domain = self.get_domain(domain_id)
@@ -99,9 +101,12 @@ class DomainService:
             fallback = self.domain_repository.get_by_id(fallback_domain_id)
             if not fallback:
                 raise ValidationError(f"回退域名 ID {fallback_domain_id} 不存在")
-        updated = self.domain_repository.update(domain_id, name, description, is_active, fallback_domain_id)
+        updated = self.domain_repository.update(
+            domain_id, name, description, default_config, is_active, fallback_domain_id
+        )
         if name and name != old_name:
             self.cache_service.invalidate(old_name)
+        self.cache_service.invalidate(updated.name)
         return updated
 
     def delete_domain(self, domain_id: int) -> bool:

@@ -76,10 +76,11 @@ python run.py
 
 | 地址                             | 说明             |
 | -------------------------------- | ---------------- |
-| http://localhost:5000/admin/     | Web 管理界面     |
-| http://localhost:5000/api/docs   | Swagger API 文档 |
-| http://localhost:5000/api/health | 健康检查         |
-| http://localhost:5000/api/query  | 公开查询接口     |
+| <http://localhost:5000/admin/>     | Web 管理界面     |
+| <http://localhost:5000/api/docs>   | Swagger API 文档 |
+| <http://localhost:5000/api/health> | 健康检查         |
+| <http://localhost:5000/api/query/language>  | 语言配置查询接口 |
+| <http://localhost:5000/api/query/default>   | 默认配置查询接口 |
 
 ## 外部集成接口
 
@@ -88,8 +89,11 @@ python run.py
 ### 简单示例
 
 ```bash
-# 查询域名配置（自动处理语言回退）
-curl "http://localhost:5000/api/query?domain=example.com&lang=en-US"
+# 查询语言配置（支持语言回退、域名回退）
+curl "http://localhost:5000/api/query/language?domain=example.com&lang=en-US"
+
+# 查询默认配置（语言无关）
+curl "http://localhost:5000/api/query/default?domain=example.com"
 ```
 
 ## API 认证
@@ -128,7 +132,7 @@ curl -u :your-password http://localhost:5000/api/domains
 
 ## 项目结构
 
-```
+```text
 ├── app/
 │   ├── api/           # REST API
 │   ├── admin/         # Web 管理界面

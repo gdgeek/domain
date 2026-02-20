@@ -9,9 +9,12 @@
             <h1 class="card-title">{{ domain.name }} 配置</h1>
             <p class="text-muted mt-1">{{ domain.description or '无描述' }}</p>
         </div>
-        {% if available_languages %}
-        <a href="{{ url_for('admin.config_create', domain_id=domain.id) }}" class="btn btn-primary">添加配置</a>
-        {% endif %}
+        <div class="actions">
+            <a href="{{ url_for('admin.domain_edit', id=domain.id) }}" class="btn btn-secondary">默认配置</a>
+            {% if available_languages %}
+            <a href="{{ url_for('admin.config_create', domain_id=domain.id) }}" class="btn btn-primary">添加配置</a>
+            {% endif %}
+        </div>
     </div>
     
     {% if configs %}
