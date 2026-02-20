@@ -20,7 +20,7 @@ def create_app(config_name='default'):
     # Enable CORS
     from flask_cors import CORS
     CORS(app, resources={
-        r"/api/query": {"origins": "*"},
+        r"/api/query/*": {"origins": "*"},
         r"/api/health": {"origins": "*"}
     })
 
