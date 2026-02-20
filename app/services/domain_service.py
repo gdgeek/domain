@@ -48,6 +48,23 @@ class DomainService:
             raise ValidationError("域名长度不能超过255个字符")
         return name
 
+    def _validate_no_fallback_cycle(self, domain_id: int, fallback_domain_id: int) -> None:
+        """Validate that fallback chain does not create a cycle."""
+        current_id = fallback_domain_id
+        visited = set()
+
+        while current_id:
+            if current_id == domain_id:
+                raise ValidationError("回退域名配置不能形成循环")
+            if current_id in visited:
+                break
+            visited.add(current_id)
+
+            current_domain = self.domain_repository.get_by_id(current_id)
+            if not current_domain:
+                break
+            current_id = current_domain.fallback_domain_id
+
     def create_domain(self, name: str, description: str = None, default_config: dict = None,
                       is_active: bool = True, fallback_domain_id: int = None) -> Domain:
         """Create a new domain."""
@@ -101,6 +118,7 @@ class DomainService:
             fallback = self.domain_repository.get_by_id(fallback_domain_id)
             if not fallback:
                 raise ValidationError(f"回退域名 ID {fallback_domain_id} 不存在")
+            self._validate_no_fallback_cycle(domain_id, fallback_domain_id)
         updated = self.domain_repository.update(
             domain_id, name, description, default_config, is_active, fallback_domain_id
         )

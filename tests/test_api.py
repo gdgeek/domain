@@ -151,6 +151,30 @@ def test_domain_fallback(client):
     assert data['data']['title'] == '主域名配置'
 
 
+def test_domain_fallback_cycle_not_allowed(client):
+    """Test circular fallback chain is rejected."""
+    resp_a = client.post('/api/domains',
+                         data=json.dumps({'name': 'a.com'}),
+                         content_type='application/json')
+    assert resp_a.status_code == 201
+    a_id = json.loads(resp_a.data)['id']
+
+    resp_b = client.post('/api/domains',
+                         data=json.dumps({
+                             'name': 'b.com',
+                             'fallback_domain_id': a_id
+                         }),
+                         content_type='application/json')
+    assert resp_b.status_code == 201
+    b_id = json.loads(resp_b.data)['id']
+
+    # Try to update A -> B, which forms A -> B -> A cycle
+    response = client.put(f'/api/domains/{a_id}',
+                          data=json.dumps({'fallback_domain_id': b_id}),
+                          content_type='application/json')
+    assert response.status_code == 400
+
+
 def test_query_language_config_does_not_mix_default_config(client):
     """Test language query returns language config only (no default config mix)."""
     resp = client.post('/api/domains',
