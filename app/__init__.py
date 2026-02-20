@@ -8,6 +8,10 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
+    # Session 过期时间：30 分钟
+    from datetime import timedelta
+    app.permanent_session_lifetime = timedelta(minutes=30)
+
     # Initialize extensions
     from app.extensions import db, migrate
     db.init_app(app)
