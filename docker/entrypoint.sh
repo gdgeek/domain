@@ -41,25 +41,7 @@ echo "[entrypoint] Checking current migration state..."
 flask db current 2>&1 || true
 
 echo "[entrypoint] Running database migrations..."
-set +e
 flask db upgrade 2>&1
-MIGRATE_EXIT=$?
-set -e
-
-if [ "$MIGRATE_EXIT" -ne 0 ]; then
-  echo "[entrypoint] Migration failed (exit code: $MIGRATE_EXIT)."
-  echo "[entrypoint] Attempting to stamp current state and retry..."
-  flask db stamp head 2>&1 || true
-  set +e
-  flask db upgrade 2>&1
-  MIGRATE_EXIT=$?
-  set -e
-  if [ "$MIGRATE_EXIT" -ne 0 ]; then
-    echo "[entrypoint] Migration retry also failed (exit code: $MIGRATE_EXIT). Aborting."
-    exit 1
-  fi
-fi
-
 echo "[entrypoint] Migration completed successfully."
 
 if [ -n "${START_COMMAND:-}" ]; then
