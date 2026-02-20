@@ -23,8 +23,12 @@ def upgrade():
         op.add_column('domains', sa.Column('default_config', sa.JSON(), nullable=True))
 
     op.execute("UPDATE domains SET default_config = '{}' WHERE default_config IS NULL")
-    with op.batch_alter_table('domains') as batch_op:
-        batch_op.alter_column('default_config', nullable=False)
+
+    if bind.dialect.name == 'mysql':
+        op.execute("ALTER TABLE domains MODIFY default_config JSON NOT NULL")
+    else:
+        with op.batch_alter_table('domains') as batch_op:
+            batch_op.alter_column('default_config', nullable=False)
 
 
 def downgrade():
