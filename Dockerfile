@@ -47,4 +47,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
 
 # Run with gunicorn (auto-migrate on start)
-CMD ["sh", "-c", "flask db upgrade && gunicorn --bind 0.0.0.0:5000 --workers 4 --access-logfile - run:app"]
+CMD ["sh", "-c", "flask db upgrade >/tmp/migrate.log 2>&1 || (echo 'WARNING: Database migration failed, startup aborted.'; cat /tmp/migrate.log; exit 1); gunicorn --bind 0.0.0.0:5000 --workers 4 --access-logfile - run:app"]
