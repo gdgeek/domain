@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    entrypoint: ["/app/docker/entrypoint.sh"]
     volumes:
       - .:/app
     environment:
@@ -20,7 +21,7 @@ services:
       - REDIS_PORT=6379
       - ADMIN_PASSWORD=admin123
     ports:
-      - "5000:5000"
+      - "5001:5000"
     depends_on:
       db:
         condition: service_healthy
