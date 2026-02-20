@@ -15,7 +15,13 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('domains', sa.Column('default_config', sa.JSON(), nullable=True))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {col['name'] for col in inspector.get_columns('domains')}
+
+    if 'default_config' not in columns:
+        op.add_column('domains', sa.Column('default_config', sa.JSON(), nullable=True))
+
     op.execute("UPDATE domains SET default_config = '{}' WHERE default_config IS NULL")
     with op.batch_alter_table('domains') as batch_op:
         batch_op.alter_column('default_config', nullable=False)

@@ -19,7 +19,19 @@ target_metadata = db.metadata
 
 
 def get_url():
-    return os.environ.get('DATABASE_URL', 'sqlite:///dev.db')
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        return database_url
+
+    db_host = os.environ.get('DB_HOST')
+    if db_host:
+        db_user = os.environ.get('DB_USER', 'root')
+        db_password = os.environ.get('DB_PASSWORD', '')
+        db_port = os.environ.get('DB_PORT', '3306')
+        db_name = os.environ.get('DB_NAME', 'domain_config')
+        return f'mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}?charset=utf8mb4'
+
+    return 'sqlite:///dev.db'
 
 
 def run_migrations_offline():

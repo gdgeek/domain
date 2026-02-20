@@ -68,12 +68,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
-    import os
-    _basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        f'sqlite:///{os.path.join(_basedir, "dev.db")}'
-    )
+    SQLALCHEMY_DATABASE_URI = get_database_url()
 
 
 class TestingConfig(Config):
