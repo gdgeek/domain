@@ -31,6 +31,9 @@ RUN pip install --no-cache /wheels/*
 # Copy application code
 COPY . .
 
+# Ensure entrypoint is executable
+RUN chmod +x /app/docker/entrypoint.sh
+
 # Create non-root user
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
@@ -46,5 +49,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
 
-# Run with gunicorn (auto-migrate on start)
-CMD ["sh", "-c", "flask db upgrade >/tmp/migrate.log 2>&1 || (echo 'WARNING: Database migration failed, startup aborted.'; cat /tmp/migrate.log; exit 1); gunicorn --bind 0.0.0.0:5000 --workers 4 --access-logfile - run:app"]
+# Run with unified entrypoint (wait db + migrate + start app)
+CMD ["/app/docker/entrypoint.sh"]

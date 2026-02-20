@@ -26,7 +26,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    command: 'sh -c "flask db upgrade >/tmp/migrate.log 2>&1 || (echo ''WARNING: Database migration failed, startup aborted.''; cat /tmp/migrate.log; exit 1); flask run --host=0.0.0.0 --reload"'
 
   db:
     image: mysql:8.0

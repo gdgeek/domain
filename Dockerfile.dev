@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code (will be overridden by volume mount)
 COPY . .
 
+# Ensure entrypoint is executable
+RUN chmod +x /app/docker/entrypoint.sh
+
 # Environment
 ENV FLASK_ENV=development
 ENV FLASK_DEBUG=1
@@ -23,5 +26,5 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
-# Run with Flask development server (auto-reload)
-CMD ["python", "run.py"]
+# Run with unified entrypoint (wait db + migrate + start app)
+CMD ["/app/docker/entrypoint.sh"]
