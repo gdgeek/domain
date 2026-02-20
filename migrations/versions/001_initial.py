@@ -9,7 +9,7 @@ from alembic import context
 
 
 # revision identifiers
-revision = '001'
+revision = '001_initial'
 down_revision = None
 branch_labels = None
 depends_on = None
