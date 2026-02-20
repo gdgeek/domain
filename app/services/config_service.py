@@ -111,7 +111,6 @@ class ConfigService:
                     actual_language = default_lang
                     is_domain_fallback = True
 
-        data = {}
         base_domain = actual_domain if config else domain
         default_data = (base_domain.default_config or {}) if base_domain else {}
 
